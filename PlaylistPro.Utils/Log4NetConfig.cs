@@ -7,7 +7,7 @@ namespace Playlist_Pro
     {
         public static ILog GetLogger()
         {
-            XmlConfigurator.Configure(new System.IO.FileInfo("log4net.config"));
+            XmlConfigurator.Configure(new FileInfo("log4net.config"));
             return LogManager.GetLogger(typeof(Log4NetConfig));
         }
     }

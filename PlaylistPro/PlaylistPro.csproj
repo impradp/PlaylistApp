@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\PlaylistPro.Utils\PlaylistPro.Utils.csproj" />
     <ProjectReference Include="..\SongFinder\SongFinder.csproj" />
   </ItemGroup>
 

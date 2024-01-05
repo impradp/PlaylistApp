@@ -55,7 +55,7 @@ namespace Playlist_Pro.Controllers
                 #region Extract And Save locally
                 logger.Info(string.Format("Fetching songs from youtube"));
 
-                var onlineResponse = await _songFinderService.download(song.PlatformUrl, song.Platform);
+                var onlineResponse = await _songFinderService.Download(song.PlatformUrl, song.Platform);
 
                 logger.Info(string.Format("Saved youtube song locally with title:{0}", onlineResponse.Title));
                 #endregion
@@ -117,7 +117,7 @@ namespace Playlist_Pro.Controllers
                 logger.Info(string.Format("Fetching songs from youtube"));
 
                 #region Fetch from online platform
-                var onlineResponse = _songFinderService.find(name, "Youtube");
+                var onlineResponse = _songFinderService.Find(name, "Youtube");
                 #endregion
 
                 logger.Info(string.Format("Youtube API Fetch Completed with {0} results", onlineResponse.Count()));

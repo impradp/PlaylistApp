@@ -1,7 +1,7 @@
-﻿using System;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
+using Playlist_Pro;
 using SongFinder.Models;
 using YoutubeExplode;
 
@@ -25,37 +25,51 @@ namespace SongFinder.Platforms
         /// <returns>The list of all available songs in youtube based on keyword.</returns>
         public IEnumerable<SongFinderResponse> Search(string query)
         {
-            var youtubeService = new YouTubeService(new BaseClientService.Initializer()
+            var logger = Log4NetConfig.GetLogger();
+            try
             {
-                ApiKey = _apiKey,
-                ApplicationName = "PlaylistPro"
-            });
-
-            var searchListRequest = youtubeService.Search.List("snippet");
-            searchListRequest.Q = query;
-            searchListRequest.MaxResults = 10;
-
-            var searchListResponse = searchListRequest.Execute();
-
-            List<SongFinderResponse> response = new List<SongFinderResponse>();
-            foreach (var searchResult in searchListResponse.Items)
-            {
-                if (searchResult.Id.Kind == "youtube#video")
+                var youtubeService = new YouTubeService(new BaseClientService.Initializer()
                 {
-                    var videoRequest = youtubeService.Videos.List("snippet,contentDetails");
-                    videoRequest.Id = searchResult.Id.VideoId;
-                    var videoResponse = videoRequest.Execute();
+                    ApiKey = _apiKey,
+                    ApplicationName = "PlaylistPro"
+                });
 
-                    var video = videoResponse.Items[0];
-                    // Build the video URL based on the ID
-                    string videoUrl = $"https://www.youtube.com/watch?v={video.Id}";
+                var searchListRequest = youtubeService.Search.List("snippet");
+                searchListRequest.Q = query;
+                searchListRequest.MaxResults = 10;
 
-                    // Create a SongFinderResponse object with metadata and URL
-                    response.Add(new SongFinderResponse(video.Snippet.Title, video.Snippet.Description, videoUrl, "", ""));
+                logger.Info(string.Format("Search list request initiated through Youtube for query:{0}", query));
+
+                var searchListResponse = searchListRequest.Execute();
+
+                logger.Info(string.Format("Search list request completed through Youtube for query:{0} with {1} results", query, searchListResponse.Items.Count));
+
+                List<SongFinderResponse> response = new List<SongFinderResponse>();
+                foreach (var searchResult in searchListResponse.Items)
+                {
+                    if (searchResult.Id.Kind == "youtube#video")
+                    {
+                        var videoRequest = youtubeService.Videos.List("snippet,contentDetails");
+                        videoRequest.Id = searchResult.Id.VideoId;
+                        var videoResponse = videoRequest.Execute();
+
+                        var video = videoResponse.Items[0];
+                        // Build the video URL based on the ID
+                        string videoUrl = $"https://www.youtube.com/watch?v={video.Id}";
+
+                        // Create a SongFinderResponse object with metadata and URL
+                        response.Add(new SongFinderResponse(video.Snippet.Title, video.Snippet.Description, videoUrl, "", ""));
+                    }
                 }
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                logger.Error(string.Format("Exception occured with message:{0} while searching song list through Youtube for query:{1}", ex.Message, query));
+                throw new Exception(ex.Message);
             }
 
-            return response;
         }
 
         /// <summary>
@@ -65,10 +79,13 @@ namespace SongFinder.Platforms
         /// <returns>The response containing the online metadata of the song</returns>
         public async Task<SongFinderResponse> ExtractAndSave(string youtubeUrl)
         {
+            var logger = Log4NetConfig.GetLogger();
             try
             {
+                logger.Info(string.Format("Extracting video id from youtube url:{0}", youtubeUrl));
                 var videoId = ExtractVideoIdFromUrl(youtubeUrl);
 
+                logger.Info(string.Format("Fetch video details from youtube API for videoId:{0}", videoId));
                 var videoTask = _youtubeClient.Videos.GetAsync(videoId);
                 var streamManifestTask = _youtubeClient.Videos.Streams.GetManifestAsync(videoId);
 
@@ -79,6 +96,7 @@ namespace SongFinder.Platforms
 
                 if (audioStreamInfo == null)
                 {
+                    logger.Error("Audio stream not found");
                     throw new Exception("Audio stream not found.");
                 }
 
@@ -86,6 +104,7 @@ namespace SongFinder.Platforms
 
                 if (audioStream == null)
                 {
+                    logger.Error("Audio stream could not be retrieved.");
                     throw new Exception("Audio stream could not be retrieved.");
                 }
 
@@ -95,13 +114,15 @@ namespace SongFinder.Platforms
                 var outputPath = Path.Combine(@"D:\Files", $"{songTitle}.mp3");
 
                 await _youtubeClient.Videos.Streams.DownloadAsync(audioStreamInfo, outputPath).ConfigureAwait(false);
+                logger.Info(string.Format("Audio successfully downloaded in output path:{0}", outputPath));
 
-                var thumbnailUrl = video.Thumbnails.FirstOrDefault()?.Url; 
+                var thumbnailUrl = video.Thumbnails.FirstOrDefault()?.Url;
 
                 return new SongFinderResponse(video.Title, video.Description, video.Url, $"{songTitle}.mp3", thumbnailUrl ?? "");
             }
-            catch (HttpRequestException)
+            catch (Exception ex)
             {
+                logger.Error(string.Format("Exception occured with messsage:{0} while extracting and converting song from youtube.", ex.Message));
                 throw;
             }
         }
@@ -120,7 +141,7 @@ namespace SongFinder.Platforms
             }
             else
             {
-                return "Video ID not found";
+                throw new Exception("Video ID not found");
             }
         }
     }
