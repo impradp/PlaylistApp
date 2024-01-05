@@ -1,0 +1,34 @@
+# .NET specific .gitignore
+
+# Build folders
+bin/
+obj/
+
+# Visual Studio files
+.vs/
+*.suo
+*.cache
+*.csproj.user
+*.user
+*.log
+*.vspscc
+*.vssscc
+*.dbmdl
+*.dbproj.schemaview
+*.pfx
+*.bak
+*.publishsettings
+node_modules/
+
+# Rider files
+.idea/
+*.sln.iml
+
+# NuGet packages
+packages/
+*.nupkg
+*.paket
+*.dll
+
+# Config Files
+appsettings.json
