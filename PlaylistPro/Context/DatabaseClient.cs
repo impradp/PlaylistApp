@@ -7,6 +7,11 @@ namespace Playlist_Pro.DBContext
 {
     public class DatabaseClient
     {
+        /// <summary>
+        /// Initializes the song container used for song service.
+        /// </summary>
+        /// <param name="configurationSection">The configuration interface used to configure keys.</param>
+        /// <returns>The song service initialized through the container initialization.</returns>
         public static async Task<SongService> InitializeSongContainer(IConfigurationSection configurationSection)
         {
             var databaseName = configurationSection["DatabaseName"];
@@ -19,20 +24,32 @@ namespace Playlist_Pro.DBContext
             var database = await client.CreateDatabaseIfNotExistsAsync(databaseName);
             await database.Database.CreateContainerIfNotExistsAsync(containerName, "/id");
 
-            var cosmosDbService = new SongService(container);
-            return cosmosDbService;
+            var songService = new SongService(container);
+            return songService;
         }
 
-        public static SongFinderService InitilizeKeys(IConfigurationSection configurationSection)
+        /// <summary>
+        /// Initializes keys for the SongFinder platforms used.
+        /// </summary>
+        /// <param name="configurationSection">The configuration interface used to configure keys.</param>
+        /// <returns>The songfinder service for service configuration.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when the API keys are missing.</exception>
+        public static SongFinderService InitializeKeys(IConfigurationSection configurationSection)
         {
-            var apiKey = configurationSection["YoutubeAPIKey"];
-            var _logger = LogManager.GetLogger(typeof(DatabaseClient));
-            if (apiKey == null)
+
+            var youTubeApiKey = configurationSection["YoutubeAPIKey"];
+            var logger = LogManager.GetLogger(typeof(DatabaseClient));
+            if (string.IsNullOrEmpty(youTubeApiKey))
             {
-                throw new Exception("Platform API Keys are missing.");
+                var errorMessage = "Youtube API Keys are missing.";
+                logger.Error(errorMessage);
+                throw new ArgumentNullException(nameof(configurationSection), errorMessage);
             }
-            var songFinderService = new SongFinderService(apiKey, _logger);
+            var songFinderService = new SongFinderService(youTubeApiKey, logger);
+
+            //Use this section to initlize the container service for other online platforms like soundcloud.
             return songFinderService;
         }
     }
+
 }

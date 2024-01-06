@@ -1,5 +1,4 @@
-﻿using log4net;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Playlist_Pro.Models;
 using Playlist_Pro.Services.Song;
 using SongFinder.Services;
@@ -12,8 +11,6 @@ namespace Playlist_Pro.Controllers
     {
         private readonly ISongService _songService;
         private readonly ISongFinderService _songFinderService;
-
-
 
         public SongsController(ISongService songService, ISongFinderService songFinderService)
         {
@@ -36,7 +33,6 @@ namespace Playlist_Pro.Controllers
             {
                 throw;
             }
-
         }
 
         /// <summary>
@@ -91,7 +87,7 @@ namespace Playlist_Pro.Controllers
         /// </summary>
         /// <param name="song">The updated values for a particular song</param>
         /// <returns></returns>
-        [HttpPut("{id}")]
+        [HttpPut]
         public async Task<IActionResult> Edit([FromBody] SongModel song)
         {
             try
@@ -123,7 +119,6 @@ namespace Playlist_Pro.Controllers
             {
                 throw;
             }
-
         }
 
         ///<summary>
@@ -136,9 +131,7 @@ namespace Playlist_Pro.Controllers
         {
             try
             {
-                #region Fetch from online platform
                 var onlineResponse = _songFinderService.Find(name, "Youtube");
-                #endregion
 
                 return Ok(new { local = await _songService.GetByNameAsync(name), platforms = onlineResponse });
             }

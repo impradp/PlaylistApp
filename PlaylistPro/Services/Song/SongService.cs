@@ -1,6 +1,5 @@
 ﻿using log4net;
 using Microsoft.Azure.Cosmos;
-using Playlist_Pro.Controllers;
 using Playlist_Pro.Models;
 
 namespace Playlist_Pro.Services.Song

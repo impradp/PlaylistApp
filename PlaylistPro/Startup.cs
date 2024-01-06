@@ -20,7 +20,7 @@ namespace Playlist_Pro
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen();
             services.AddSingleton<ISongService>(DBContext.DatabaseClient.InitializeSongContainer(Configuration.GetSection("CosmosDb")).GetAwaiter().GetResult());
-            services.AddSingleton<ISongFinderService>(DBContext.DatabaseClient.InitilizeKeys(Configuration.GetSection("SongFinder")));
+            services.AddSingleton<ISongFinderService>(DBContext.DatabaseClient.InitializeKeys(Configuration.GetSection("SongFinder")));
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

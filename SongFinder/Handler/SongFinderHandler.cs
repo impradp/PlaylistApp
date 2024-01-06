@@ -6,12 +6,14 @@ namespace SongFinder.Handler
 {
     public class SongFinderHandler
     {
-        private readonly Dictionary<string, IPlatform> platforms = new();
+        private readonly ILog _logger;
+        private readonly Dictionary<string, IPlatform> platforms = [];
 
 
         public SongFinderHandler(string youtubeApiKey, ILog logger)
         {
-            platforms.Add("youtube", new Youtube(youtubeApiKey, logger));
+            _logger = logger;
+            platforms.Add("youtube", new Youtube(youtubeApiKey, _logger));
         }
 
         /// <summary>
@@ -22,12 +24,8 @@ namespace SongFinder.Handler
         /// <returns>The list of songs</returns>
         public IEnumerable<SongFinderResponse>? FindSongs(string query, string resourceName)
         {
-            if (platforms.ContainsKey(resourceName.ToLower()))
-            {
-                return platforms[resourceName.ToLower()].Search(query);
-            }
-
-            return null;
+            ValidatePlatformResource(resourceName);
+            return platforms[resourceName.ToLower()].Search(query);
         }
 
         /// <summary>
@@ -36,14 +34,24 @@ namespace SongFinder.Handler
         /// <param name="query">The title of the song</param>
         /// <param name="resourceName">The platform in which the song is to be searched.</param>
         /// <returns>The response containing the metadata referencing the attributes of online response</returns>
-        public async Task<SongFinderResponse?> extractAndSave(string query, string resourceName)
+        public async Task<SongFinderResponse?> ExtractAndSave(string query, string resourceName)
         {
-            if (platforms.ContainsKey(resourceName.ToLower()))
-            {
-                return await platforms[resourceName.ToLower()].ExtractAndSave(query);
-            }
+            ValidatePlatformResource(resourceName);
+            return await platforms[resourceName.ToLower()].ExtractAndSave(query);
+        }
 
-            return null;
+        /// <summary>
+        /// Validates the resource registered in system for song finder.
+        /// </summary>
+        /// <param name="resourceName">The name of the resource platform used to find song.</param>
+        /// <exception cref="Exception">Throws if the platform used are not registered for song finder.</exception>
+        private void ValidatePlatformResource(string resourceName)
+        {
+            if (!platforms.ContainsKey(resourceName.ToLower()))
+            {
+                _logger.Error(string.Format("Platform : {0} not registered for song finder.", resourceName));
+                throw new Exception(string.Format("Platform : {0} not registered for song finder.", resourceName));
+            }
         }
     }
 }

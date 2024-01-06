@@ -1,23 +1,34 @@
 ﻿using System.Text.RegularExpressions;
 using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
+using Google.Apis.YouTube.v3.Data;
 using log4net;
 using SongFinder.Models;
 using YoutubeExplode;
 
 namespace SongFinder.Platforms
 {
-    public class Youtube : IPlatform
+    public partial class Youtube : IPlatform
     {
+
+        [GeneratedRegex("[^a-zA-Z0-9_]+")]
+        private static partial Regex RegexPatternExcludingSpecialCharacters();
+
+        private readonly ILog _logger;
         private readonly string _apiKey;
         private readonly YoutubeClient _youtubeClient;
-        private readonly ILog _logger;
+        private readonly YouTubeService _youTubeService;
 
         public Youtube(string apiKey, ILog logger)
         {
             _apiKey = apiKey;
             _youtubeClient = new YoutubeClient();
             _logger = logger;
+            _youTubeService = new YouTubeService(new BaseClientService.Initializer()
+            {
+                ApiKey = _apiKey,
+                ApplicationName = "PlaylistPro"
+            });
         }
 
         /// <summary>
@@ -29,37 +40,30 @@ namespace SongFinder.Platforms
         {
             try
             {
-                var youtubeService = new YouTubeService(new BaseClientService.Initializer()
-                {
-                    ApiKey = _apiKey,
-                    ApplicationName = "PlaylistPro"
-                });
+                _logger.Info(string.Format("Search list request initiated through Youtube for query:{0}", query));
 
-                var searchListRequest = youtubeService.Search.List("snippet");
+                var searchListRequest = _youTubeService.Search.List("snippet");
                 searchListRequest.Q = query;
                 searchListRequest.MaxResults = 10;
-
-                _logger.Info(string.Format("Search list request initiated through Youtube for query:{0}", query));
 
                 var searchListResponse = searchListRequest.Execute();
 
                 _logger.Info(string.Format("Search list request completed through Youtube for query:{0} with {1} results", query, searchListResponse.Items.Count));
 
-                List<SongFinderResponse> response = new List<SongFinderResponse>();
+                var response = new List<SongFinderResponse>();
+
                 foreach (var searchResult in searchListResponse.Items)
                 {
                     if (searchResult.Id.Kind == "youtube#video")
                     {
-                        var videoRequest = youtubeService.Videos.List("snippet,contentDetails");
-                        videoRequest.Id = searchResult.Id.VideoId;
-                        var videoResponse = videoRequest.Execute();
+                        var video = GetVideoDetails(searchResult.Id.VideoId);
 
-                        var video = videoResponse.Items[0];
-                        // Build the video URL based on the ID
-                        string videoUrl = $"https://www.youtube.com/watch?v={video.Id}";
+                        if (video != null)
+                        {
+                            string videoUrl = $"https://www.youtube.com/watch?v={video.Id}";
+                            response.Add(new SongFinderResponse(video.Snippet.Title, video.Snippet.Description, videoUrl, "", ""));
+                        }
 
-                        // Create a SongFinderResponse object with metadata and URL
-                        response.Add(new SongFinderResponse(video.Snippet.Title, video.Snippet.Description, videoUrl, "", ""));
                     }
                 }
 
@@ -67,10 +71,36 @@ namespace SongFinder.Platforms
             }
             catch (Exception ex)
             {
-                _logger.Error(string.Format("Exception occured with message:{0} while searching song list through Youtube for query:{1}", ex.Message, query));
-                throw new Exception(string.Format("Exception occured with message:{0} while searching song list through Youtube for query:{1}", ex.Message, query));
+                LogAndThrowException("search", ex, query);
+                throw;
             }
+        }
 
+        /// <summary>
+        /// Generic method to log and throw exception for catch block.
+        /// </summary>
+        /// <param name="operation">The operation used when the exception encountered.</param>
+        /// <param name="ex">The exception message through stack trace.</param>
+        /// <param name="query">The query used when the exception encountered.</param>
+        /// <exception cref="Exception">Throws exception based on diffrent operations.</exception>
+        private void LogAndThrowException(string operation, Exception ex, string? query)
+        {
+            _logger.Error($"Exception occurred during {operation} operation: {ex.Message} for query: {query ?? "N/A"}");
+            throw new Exception($"Exception occurred during {operation} operation: {ex.Message} for query: {query ?? "N/A"}");
+        }
+
+        /// <summary>
+        /// The video details from youtube API.
+        /// </summary>
+        /// <param name="videoId">The video id of youtube.</param>
+        /// <returns>The video response from youtube api.</returns>
+        private Video? GetVideoDetails(string videoId)
+        {
+            var videoRequest = _youTubeService.Videos.List("snippet,contentDetails");
+            videoRequest.Id = videoId;
+            var videoResponse = videoRequest.Execute();
+
+            return videoResponse.Items.FirstOrDefault();
         }
 
         /// <summary>
@@ -111,8 +141,7 @@ namespace SongFinder.Platforms
                     throw new Exception("Audio stream could not be retrieved.");
                 }
 
-                var validPattern = "[^a-zA-Z0-9_]+";
-                var songTitle = Regex.Replace(video.Title, validPattern, "_");
+                var songTitle = GetValidSongTitle(video.Title);
 
                 var outputPath = Path.Combine(@"D:\Files", $"{songTitle}.mp3");
 
@@ -120,28 +149,38 @@ namespace SongFinder.Platforms
                 _logger.Info(string.Format("Audio successfully downloaded in output path:{0}", outputPath));
                 #endregion
 
-                var thumbnailUrl = video.Thumbnails.FirstOrDefault()?.Url;
+                var thumbnailUrl = video.Thumbnails.Count > 0 ? video.Thumbnails[0].Url : null;
 
-                return new SongFinderResponse(video.Title, video.Description, video.Url, $"{songTitle}.mp3", thumbnailUrl ?? "");
+                return new SongFinderResponse(video.Title, video.Description, video.Url, $"{songTitle}.mp3", thumbnailUrl);
             }
             catch (Exception ex)
             {
-                _logger.Error(string.Format("Exception occured with messsage:{0} while extracting and converting song from youtube.", ex.Message));
-                throw new Exception(string.Format("Exception occured with messsage:{0} while extracting and converting song from youtube.", ex.Message));
+                LogAndThrowException("extract and save", ex, youtubeUrl);
+                throw;
             }
+        }
+
+        /// <summary>
+        /// Generates valid song title for the mp3 track created.
+        /// </summary>
+        /// <param name="title">The title from video selected from youtube.</param>
+        /// <returns>The valid title for mp3 track generated.</returns>
+        private string GetValidSongTitle(string title)
+        {
+            return RegexPatternExcludingSpecialCharacters().Replace(title, "_");
         }
 
         /// <summary>
         /// Extract youtube video id using regex
         /// </summary>
         /// <param name="url">The youtube url</param>
-        /// <returns>The video id for youtube url provided.</returns>
+        /// <returns>The extracted video ID if found.</returns>
         /// <exception cref="Exception">Throws video id not found exception</exception>
         private string ExtractVideoIdFromUrl(string url)
         {
             string pattern = @"(?:\?|&)v=([a-zA-Z0-9_-]{11})";
 
-            Regex regex = new Regex(pattern);
+            Regex regex = new(pattern);
 
             Match match = regex.Match(url);
 
@@ -151,9 +190,10 @@ namespace SongFinder.Platforms
             }
             else
             {
-                _logger.Error("Video ID not found");
-                throw new Exception("Video ID not found");
+                _logger.Error("Video ID not found in the provided YouTube URL: " + url);
+                throw new ArgumentException("Invalid or unrecognized YouTube URL", nameof(url));
             }
         }
+
     }
 }

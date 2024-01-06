@@ -10,9 +10,9 @@ namespace SongFinder.Models
         public string VideoUrl { get; set; }
         public string Path { get; set; }
 
-        public string ThumbnailUrl { get; set; }
+        public string? ThumbnailUrl { get; set; }
 
-        public SongFinderResponse(string title, string description, string videoUrl, string path, string thumbnailUrl)
+        public SongFinderResponse(string title, string description, string videoUrl, string path, string? thumbnailUrl)
         {
             Title = title;
             Description = description;

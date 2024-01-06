@@ -5,13 +5,13 @@ namespace Playlist_Pro.Models
     public class SongModel
     {
         [JsonProperty(PropertyName = "id")]
-        public string Id { get; set; }
+        public required string Id { get; set; }
 
         [JsonProperty(PropertyName = "name")]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         [JsonProperty(PropertyName = "description")]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         [JsonProperty(PropertyName = "isFavourite")]
         public bool IsFavourite { get; set; } = false;
@@ -23,10 +23,10 @@ namespace Playlist_Pro.Models
         public required string PlatformUrl { get; set; }
 
         [JsonProperty(PropertyName = "path")]
-        public string Path { get; set; }
+        public string? Path { get; set; }
 
         [JsonProperty(PropertyName = "thumbnailUrl")]
-        public string Thumbnail { get; set; }
+        public string? Thumbnail { get; set; }
 
     }
 }
