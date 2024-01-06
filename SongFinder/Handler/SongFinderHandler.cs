@@ -1,4 +1,5 @@
-﻿using SongFinder.Models;
+﻿using log4net;
+using SongFinder.Models;
 using SongFinder.Platforms;
 
 namespace SongFinder.Handler
@@ -8,9 +9,9 @@ namespace SongFinder.Handler
         private readonly Dictionary<string, IPlatform> platforms = new();
 
 
-        public SongFinderHandler(string youtubeApiKey)
+        public SongFinderHandler(string youtubeApiKey, ILog logger)
         {
-            platforms.Add("youtube", new Youtube(youtubeApiKey));
+            platforms.Add("youtube", new Youtube(youtubeApiKey, logger));
         }
 
         /// <summary>

@@ -1,16 +1,20 @@
-﻿using Microsoft.Azure.Cosmos;
+﻿using log4net;
+using Microsoft.Azure.Cosmos;
+using Playlist_Pro.Controllers;
 using Playlist_Pro.Models;
 
 namespace Playlist_Pro.Services.Song
 {
     public class SongService : ISongService
     {
-        private Container _container;
+        private readonly Container _container;
+        private readonly ILog _logger;
 
         public SongService(
             Container container)
         {
             _container = container;
+            _logger = LogManager.GetLogger(typeof(SongService));
         }
 
         /// <summary>
@@ -20,7 +24,17 @@ namespace Playlist_Pro.Services.Song
         /// <returns>The song saved in local library.</returns>
         public async Task AddAsync(SongModel song)
         {
-            await _container.CreateItemAsync(song, new PartitionKey(song.Id));
+            try
+            {
+                await _container.CreateItemAsync(song, new PartitionKey(song.Id));
+                _logger.Info("Song saved successfully.");
+            }
+            catch (Exception ex)
+            {
+                _logger.Info(string.Format("Exception occured while saving song with message:{0}", ex.Message));
+                throw new Exception(string.Format("Exception occured while saving song with message:{0}", ex.Message));
+            }
+
         }
 
         /// <summary>
@@ -30,7 +44,17 @@ namespace Playlist_Pro.Services.Song
         /// <returns></returns>
         public async Task DeleteAsync(string id)
         {
-            await _container.DeleteItemAsync<SongModel>(id, new PartitionKey(id));
+            try
+            {
+                await _container.DeleteItemAsync<SongModel>(id, new PartitionKey(id));
+                _logger.Info("Song deleted successfully.");
+            }
+            catch (Exception ex)
+            {
+                _logger.Info(string.Format("Exception occured while deleting song with message:{0}", ex.Message));
+                throw new Exception(string.Format("Exception occured while deleting song with message:{0}", ex.Message));
+            }
+
         }
 
         /// <summary>
@@ -45,9 +69,10 @@ namespace Playlist_Pro.Services.Song
                 var response = await _container.ReadItemAsync<SongModel>(id, new PartitionKey(id));
                 return response.Resource;
             }
-            catch //For handling item not found and other exceptions
+            catch (Exception ex)
             {
-                throw;
+                _logger.Info(string.Format("Exception occured while fetching song with message:{0}", ex.Message));
+                throw new Exception(string.Format("Exception occured while fetching song with message:{0}", ex.Message));
             }
         }
 
@@ -57,16 +82,24 @@ namespace Playlist_Pro.Services.Song
         /// <returns>The list of all songs.</returns>
         public async Task<IEnumerable<SongModel>> GetMultipleAsync()
         {
-            var query = _container.GetItemQueryIterator<SongModel>(new QueryDefinition("SELECT * FROM c"));
-
-            var results = new List<SongModel>();
-            while (query.HasMoreResults)
+            try
             {
-                var response = await query.ReadNextAsync();
-                results.AddRange(response.ToList());
-            }
+                var query = _container.GetItemQueryIterator<SongModel>(new QueryDefinition("SELECT * FROM c"));
 
-            return results;
+                var results = new List<SongModel>();
+                while (query.HasMoreResults)
+                {
+                    var response = await query.ReadNextAsync();
+                    results.AddRange(response.ToList());
+                }
+
+                return results;
+            }
+            catch (Exception ex)
+            {
+                _logger.Info(string.Format("Exception occured while fetching all songs with message:{0}", ex.Message));
+                throw new Exception(string.Format("Exception occured while fetching all songs with message:{0}", ex.Message));
+            }
         }
 
         /// <summary>
@@ -77,7 +110,16 @@ namespace Playlist_Pro.Services.Song
         /// <returns>The updated object of the definite song</returns>
         public async Task UpdateAsync(string id, SongModel song)
         {
-            await _container.UpsertItemAsync(song, new PartitionKey(id));
+            try
+            {
+                await _container.UpsertItemAsync(song, new PartitionKey(id));
+            }
+            catch (Exception ex)
+            {
+                _logger.Info(string.Format("Exception occured while updating song with message:{0}", ex.Message));
+                throw new Exception(string.Format("Exception occured while updating song with message:{0}", ex.Message));
+            }
+
         }
 
         /// <summary>
@@ -87,20 +129,28 @@ namespace Playlist_Pro.Services.Song
         /// <returns>The list of all available song based on keyword both from local library and online platforms.</returns>
         public async Task<IEnumerable<SongModel>> GetByNameAsync(string songName)
         {
-
-            var query = new QueryDefinition("SELECT * FROM c WHERE CONTAINS(LOWER(c.name), @name)")
-            .WithParameter("@name", songName.ToLower());
-
-            var queryResponse = _container.GetItemQueryIterator<SongModel>(query);
-
-            var results = new List<SongModel>();
-            while (queryResponse.HasMoreResults)
+            try
             {
-                var response = await queryResponse.ReadNextAsync();
-                results.AddRange(response.ToList());
+                var query = new QueryDefinition("SELECT * FROM c WHERE CONTAINS(LOWER(c.name), @name)")
+                            .WithParameter("@name", songName.ToLower());
+
+                var queryResponse = _container.GetItemQueryIterator<SongModel>(query);
+
+                var results = new List<SongModel>();
+                while (queryResponse.HasMoreResults)
+                {
+                    var response = await queryResponse.ReadNextAsync();
+                    results.AddRange(response.ToList());
+                }
+
+                return results;
+            }
+            catch (Exception ex)
+            {
+                _logger.Info(string.Format("Exception occured while fetching song from title with message:{0}", ex.Message));
+                throw new Exception(string.Format("Exception occured while fetching song from title with message:{0}", ex.Message));
             }
 
-            return results;
         }
     }
 }

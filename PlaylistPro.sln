@@ -3,13 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlaylistPro", "PlaylistPro\PlaylistPro.csproj", "{6210C882-C8C1-404E-97BE-72FE6AB9F30B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlaylistPro", "PlaylistPro\PlaylistPro.csproj", "{6210C882-C8C1-404E-97BE-72FE6AB9F30B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SongFinder", "SongFinder\SongFinder.csproj", "{21B7AB30-5306-4354-9553-B47F5D640160}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SongFinder", "SongFinder\SongFinder.csproj", "{21B7AB30-5306-4354-9553-B47F5D640160}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlaylistPro.Test", "PlaylistPro.Test\PlaylistPro.Test.csproj", "{ACCE10D8-CD10-483D-A7F3-1AF7CAE7D1CA}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlaylistPro.Utils", "PlaylistPro.Utils\PlaylistPro.Utils.csproj", "{EC8F7999-0581-4FD8-B8E9-7788BD580164}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlaylistPro.Test", "PlaylistPro.Test\PlaylistPro.Test.csproj", "{ACCE10D8-CD10-483D-A7F3-1AF7CAE7D1CA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,10 +27,6 @@ Global
 		{ACCE10D8-CD10-483D-A7F3-1AF7CAE7D1CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ACCE10D8-CD10-483D-A7F3-1AF7CAE7D1CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ACCE10D8-CD10-483D-A7F3-1AF7CAE7D1CA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EC8F7999-0581-4FD8-B8E9-7788BD580164}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EC8F7999-0581-4FD8-B8E9-7788BD580164}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EC8F7999-0581-4FD8-B8E9-7788BD580164}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EC8F7999-0581-4FD8-B8E9-7788BD580164}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

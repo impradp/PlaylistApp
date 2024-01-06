@@ -1,14 +1,15 @@
 ﻿using SongFinder.Models;
 using SongFinder.Handler;
+using log4net;
 
 namespace SongFinder.Services
 {
     public class SongFinderService : ISongFinderService
     {
-        private SongFinderHandler _songFinderHandler;
-        public SongFinderService(string youtubeAPIKey)
+        private readonly SongFinderHandler _songFinderHandler;
+        public SongFinderService(string youtubeAPIKey, ILog logger)
         {
-            _songFinderHandler = new SongFinderHandler(youtubeAPIKey);
+            _songFinderHandler = new SongFinderHandler(youtubeAPIKey, logger);
         }
 
         public IEnumerable<SongFinderResponse> Find(string query, string resourceName)

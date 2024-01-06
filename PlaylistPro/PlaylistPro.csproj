@@ -10,6 +10,7 @@
   <ItemGroup>
     <PackageReference Include="log4net" Version="2.0.15" />
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.37.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="8.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
 
@@ -18,7 +19,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PlaylistPro.Utils\PlaylistPro.Utils.csproj" />
     <ProjectReference Include="..\SongFinder\SongFinder.csproj" />
   </ItemGroup>
 

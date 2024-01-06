@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using log4net;
+using Microsoft.AspNetCore.Mvc;
 using Playlist_Pro.Models;
 using Playlist_Pro.Services.Song;
 using SongFinder.Services;
@@ -11,6 +12,7 @@ namespace Playlist_Pro.Controllers
     {
         private readonly ISongService _songService;
         private readonly ISongFinderService _songFinderService;
+
 
 
         public SongsController(ISongService songService, ISongFinderService songFinderService)
@@ -26,7 +28,15 @@ namespace Playlist_Pro.Controllers
         [HttpGet]
         public async Task<IActionResult> List()
         {
-            return Ok(await _songService.GetMultipleAsync());
+            try
+            {
+                return Ok(await _songService.GetMultipleAsync());
+            }
+            catch
+            {
+                throw;
+            }
+
         }
 
         /// <summary>
@@ -37,7 +47,15 @@ namespace Playlist_Pro.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(string id)
         {
-            return Ok(await _songService.GetAsync(id));
+            try
+            {
+                return Ok(await _songService.GetAsync(id));
+            }
+            catch
+            {
+                throw;
+            }
+
         }
 
         /// <summary>
@@ -48,17 +66,10 @@ namespace Playlist_Pro.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] SongModel song)
         {
-            var logger = Log4NetConfig.GetLogger();
             try
             {
                 // Find Song from Platforms: Youtube,Soundcloud
-                #region Extract And Save locally
-                logger.Info(string.Format("Fetching songs from youtube"));
-
                 var onlineResponse = await _songFinderService.Download(song.PlatformUrl, song.Platform);
-
-                logger.Info(string.Format("Saved youtube song locally with title:{0}", onlineResponse.Title));
-                #endregion
 
                 song.Id = Guid.NewGuid().ToString();
                 song.Path = onlineResponse.Path;
@@ -69,14 +80,10 @@ namespace Playlist_Pro.Controllers
 
                 return CreatedAtAction(nameof(Get), new { id = song.Id }, song);
             }
-            catch (Exception ex)
+            catch
             {
-                logger.Error(string.Format("Exception occured with error message :{0}", ex.Message));
-                return BadRequest("Error extracting and saving song.");
-
+                throw;
             }
-
-
         }
 
         /// <summary>
@@ -87,8 +94,16 @@ namespace Playlist_Pro.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Edit([FromBody] SongModel song)
         {
-            await _songService.UpdateAsync(song.Id, song);
-            return NoContent();
+            try
+            {
+                await _songService.UpdateAsync(song.Id, song);
+                return NoContent();
+            }
+            catch
+            {
+                throw;
+            }
+
         }
 
         /// <summary>
@@ -99,8 +114,16 @@ namespace Playlist_Pro.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {
-            await _songService.DeleteAsync(id);
-            return NoContent();
+            try
+            {
+                await _songService.DeleteAsync(id);
+                return NoContent();
+            }
+            catch
+            {
+                throw;
+            }
+
         }
 
         ///<summary>
@@ -111,23 +134,17 @@ namespace Playlist_Pro.Controllers
         [HttpGet("searchByName/{name}")]
         public async Task<IActionResult> SearchSongsByName(string name)
         {
-            var logger = Log4NetConfig.GetLogger();
             try
             {
-                logger.Info(string.Format("Fetching songs from youtube"));
-
                 #region Fetch from online platform
                 var onlineResponse = _songFinderService.Find(name, "Youtube");
                 #endregion
 
-                logger.Info(string.Format("Youtube API Fetch Completed with {0} results", onlineResponse.Count()));
-
                 return Ok(new { local = await _songService.GetByNameAsync(name), platforms = onlineResponse });
             }
-            catch (Exception ex)
+            catch
             {
-                logger.Error(string.Format("Exception occured with error message :{0}", ex.Message));
-                return BadRequest("Error searching songs.");
+                throw;
             }
         }
     }

@@ -1,6 +1,7 @@
 ﻿using SongFinder.Services;
 using Microsoft.Azure.Cosmos;
 using Playlist_Pro.Services.Song;
+using log4net;
 
 namespace Playlist_Pro.DBContext
 {
@@ -25,11 +26,12 @@ namespace Playlist_Pro.DBContext
         public static SongFinderService InitilizeKeys(IConfigurationSection configurationSection)
         {
             var apiKey = configurationSection["YoutubeAPIKey"];
+            var _logger = LogManager.GetLogger(typeof(DatabaseClient));
             if (apiKey == null)
             {
-                throw new ArgumentException("Platform API Keys are missing.");
+                throw new Exception("Platform API Keys are missing.");
             }
-            var songFinderService = new SongFinderService(apiKey);
+            var songFinderService = new SongFinderService(apiKey, _logger);
             return songFinderService;
         }
     }
