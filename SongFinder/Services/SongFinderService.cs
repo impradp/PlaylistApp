@@ -1,6 +1,7 @@
 ﻿using SongFinder.Models;
 using SongFinder.Handler;
 using log4net;
+using PlaylistPro.Exceptions;
 
 namespace SongFinder.Services
 {
@@ -41,7 +42,7 @@ namespace SongFinder.Services
             }
             else
             {
-                throw new Exception("Error extracting and saving song.");
+                throw new CustomException("Error extracting and saving song.");
             }
         }
     }

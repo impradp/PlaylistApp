@@ -28,5 +28,8 @@ namespace Playlist_Pro.Models
         [JsonProperty(PropertyName = "thumbnailUrl")]
         public string? Thumbnail { get; set; }
 
+        [JsonProperty(PropertyName = "author")]
+        public string? Author { get; set; }
+
     }
 }

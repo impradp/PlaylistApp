@@ -1,6 +1,7 @@
 ﻿using log4net;
 using Microsoft.Azure.Cosmos;
 using Playlist_Pro.Models;
+using PlaylistPro.Exceptions;
 
 namespace Playlist_Pro.Services.Song
 {
@@ -31,7 +32,7 @@ namespace Playlist_Pro.Services.Song
             catch (Exception ex)
             {
                 _logger.Info(string.Format("Exception occured while saving song with message:{0}", ex.Message));
-                throw new Exception(string.Format("Exception occured while saving song with message:{0}", ex.Message));
+                throw new CustomException(string.Format("Exception occured while saving song with message:{0}", ex.Message));
             }
 
         }
@@ -51,7 +52,7 @@ namespace Playlist_Pro.Services.Song
             catch (Exception ex)
             {
                 _logger.Info(string.Format("Exception occured while deleting song with message:{0}", ex.Message));
-                throw new Exception(string.Format("Exception occured while deleting song with message:{0}", ex.Message));
+                throw new CustomException(string.Format("Exception occured while deleting song with message:{0}", ex.Message));
             }
 
         }
@@ -71,7 +72,7 @@ namespace Playlist_Pro.Services.Song
             catch (Exception ex)
             {
                 _logger.Info(string.Format("Exception occured while fetching song with message:{0}", ex.Message));
-                throw new Exception(string.Format("Exception occured while fetching song with message:{0}", ex.Message));
+                throw new CustomException(string.Format("Exception occured while fetching song with message:{0}", ex.Message));
             }
         }
 
@@ -97,7 +98,7 @@ namespace Playlist_Pro.Services.Song
             catch (Exception ex)
             {
                 _logger.Info(string.Format("Exception occured while fetching all songs with message:{0}", ex.Message));
-                throw new Exception(string.Format("Exception occured while fetching all songs with message:{0}", ex.Message));
+                throw new CustomException(string.Format("Exception occured while fetching all songs with message:{0}", ex.Message));
             }
         }
 
@@ -116,7 +117,7 @@ namespace Playlist_Pro.Services.Song
             catch (Exception ex)
             {
                 _logger.Info(string.Format("Exception occured while updating song with message:{0}", ex.Message));
-                throw new Exception(string.Format("Exception occured while updating song with message:{0}", ex.Message));
+                throw new CustomException(string.Format("Exception occured while updating song with message:{0}", ex.Message));
             }
 
         }
@@ -147,7 +148,7 @@ namespace Playlist_Pro.Services.Song
             catch (Exception ex)
             {
                 _logger.Info(string.Format("Exception occured while fetching song from title with message:{0}", ex.Message));
-                throw new Exception(string.Format("Exception occured while fetching song from title with message:{0}", ex.Message));
+                throw new CustomException(string.Format("Exception occured while fetching song from title with message:{0}", ex.Message));
             }
 
         }

@@ -25,14 +25,7 @@ namespace Playlist_Pro.Controllers
         [HttpGet]
         public async Task<IActionResult> List()
         {
-            try
-            {
-                return Ok(await _songService.GetMultipleAsync());
-            }
-            catch
-            {
-                throw;
-            }
+            return Ok(await _songService.GetMultipleAsync());
         }
 
         /// <summary>
@@ -43,15 +36,7 @@ namespace Playlist_Pro.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(string id)
         {
-            try
-            {
-                return Ok(await _songService.GetAsync(id));
-            }
-            catch
-            {
-                throw;
-            }
-
+            return Ok(await _songService.GetAsync(id));
         }
 
         /// <summary>
@@ -62,24 +47,18 @@ namespace Playlist_Pro.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] SongModel song)
         {
-            try
-            {
-                // Find Song from Platforms: Youtube,Soundcloud
-                var onlineResponse = await _songFinderService.Download(song.PlatformUrl, song.Platform);
+            // Find Song from Platforms: Youtube,Soundcloud
+            var onlineResponse = await _songFinderService.Download(song.PlatformUrl, song.Platform);
 
-                song.Id = Guid.NewGuid().ToString();
-                song.Path = onlineResponse.Path;
-                song.Name = onlineResponse.Title;
-                song.Description = onlineResponse.Description;
-                song.Thumbnail = onlineResponse.ThumbnailUrl;
-                await _songService.AddAsync(song);
+            song.Id = Guid.NewGuid().ToString();
+            song.Path = string.IsNullOrEmpty(song.Path) ? onlineResponse.Path : song.Path;
+            song.Name = string.IsNullOrEmpty(song.Name) ? onlineResponse.Title : song.Name;
+            song.Description = string.IsNullOrEmpty(song.Description) ? onlineResponse.Description : song.Description;
+            song.Thumbnail = string.IsNullOrEmpty(song.Thumbnail) ? onlineResponse.ThumbnailUrl : song.Thumbnail;
+            song.Author = string.IsNullOrEmpty(song.Author) ? onlineResponse.Author : song.Author;
+            await _songService.AddAsync(song);
 
-                return CreatedAtAction(nameof(Get), new { id = song.Id }, song);
-            }
-            catch
-            {
-                throw;
-            }
+            return CreatedAtAction(nameof(Get), new { id = song.Id }, song);
         }
 
         /// <summary>
@@ -90,15 +69,8 @@ namespace Playlist_Pro.Controllers
         [HttpPut]
         public async Task<IActionResult> Edit([FromBody] SongModel song)
         {
-            try
-            {
-                await _songService.UpdateAsync(song.Id, song);
-                return NoContent();
-            }
-            catch
-            {
-                throw;
-            }
+            await _songService.UpdateAsync(song.Id, song);
+            return NoContent();
 
         }
 
@@ -110,15 +82,8 @@ namespace Playlist_Pro.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {
-            try
-            {
-                await _songService.DeleteAsync(id);
-                return NoContent();
-            }
-            catch
-            {
-                throw;
-            }
+            await _songService.DeleteAsync(id);
+            return NoContent();
         }
 
         ///<summary>
@@ -129,16 +94,8 @@ namespace Playlist_Pro.Controllers
         [HttpGet("searchByName/{name}")]
         public async Task<IActionResult> SearchSongsByName(string name)
         {
-            try
-            {
-                var onlineResponse = _songFinderService.Find(name, "Youtube");
-
-                return Ok(new { local = await _songService.GetByNameAsync(name), platforms = onlineResponse });
-            }
-            catch
-            {
-                throw;
-            }
+            var onlineResponse = _songFinderService.Find(name, "Youtube");
+            return Ok(new { local = await _songService.GetByNameAsync(name), platforms = onlineResponse });
         }
     }
 }

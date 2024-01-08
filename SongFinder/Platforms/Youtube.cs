@@ -3,6 +3,7 @@ using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
 using log4net;
+using PlaylistPro.Exceptions;
 using SongFinder.Models;
 using YoutubeExplode;
 
@@ -52,18 +53,14 @@ namespace SongFinder.Platforms
 
                 var response = new List<SongFinderResponse>();
 
-                foreach (var searchResult in searchListResponse.Items)
+                foreach (var searchResult in searchListResponse.Items.Where(item => item.Id.Kind == "youtube#video"))
                 {
-                    if (searchResult.Id.Kind == "youtube#video")
+                    var video = GetVideoDetails(searchResult.Id.VideoId);
+
+                    if (video != null)
                     {
-                        var video = GetVideoDetails(searchResult.Id.VideoId);
-
-                        if (video != null)
-                        {
-                            string videoUrl = $"https://www.youtube.com/watch?v={video.Id}";
-                            response.Add(new SongFinderResponse(video.Snippet.Title, video.Snippet.Description, videoUrl, "", ""));
-                        }
-
+                        string videoUrl = $"https://www.youtube.com/watch?v={video.Id}";
+                        response.Add(new SongFinderResponse(video.Snippet.Title, video.Snippet.Description, videoUrl, "", "", ""));
                     }
                 }
 
@@ -86,7 +83,7 @@ namespace SongFinder.Platforms
         private void LogAndThrowException(string operation, Exception ex, string? query)
         {
             _logger.Error($"Exception occurred during {operation} operation: {ex.Message} for query: {query ?? "N/A"}");
-            throw new Exception($"Exception occurred during {operation} operation: {ex.Message} for query: {query ?? "N/A"}");
+            throw new CustomException($"Exception occurred during {operation} operation: {ex.Message} for query: {query ?? "N/A"}");
         }
 
         /// <summary>
@@ -108,13 +105,13 @@ namespace SongFinder.Platforms
         /// </summary>
         /// <param name="youtubeUrl">The youtube url of the song to be downloaded and extracted.</param>
         /// <returns>The response containing the online metadata of the song</returns>
-        public async Task<SongFinderResponse> ExtractAndSave(string youtubeUrl)
+        public async Task<SongFinderResponse> ExtractAndSave(string url)
         {
             try
             {
                 #region Validating and Fetching Audio Stream from YouTube
-                _logger.Info(string.Format("Extracting video id from youtube url:{0}", youtubeUrl));
-                var videoId = ExtractVideoIdFromUrl(youtubeUrl);
+                _logger.Info(string.Format("Extracting video id from youtube url:{0}", url));
+                var videoId = ExtractVideoIdFromUrl(url);
 
                 _logger.Info(string.Format("Fetch video details from youtube API for videoId:{0}", videoId));
                 var videoTask = _youtubeClient.Videos.GetAsync(videoId);
@@ -128,7 +125,7 @@ namespace SongFinder.Platforms
                 if (audioStreamInfo == null)
                 {
                     _logger.Error("Audio stream not found");
-                    throw new Exception("Audio stream not found.");
+                    throw new CustomException("Audio stream not found.");
                 }
                 #endregion
 
@@ -138,24 +135,25 @@ namespace SongFinder.Platforms
                 if (audioStream == null)
                 {
                     _logger.Error("Audio stream could not be retrieved.");
-                    throw new Exception("Audio stream could not be retrieved.");
+                    throw new CustomException("Audio stream could not be retrieved.");
                 }
 
                 var songTitle = GetValidSongTitle(video.Title);
 
-                var outputPath = Path.Combine(@"D:\Files", $"{songTitle}.mp3");
+                var outputPath = Path.Combine(@"D:\Private\audio-player-tutorial\src\assets", $"{songTitle}.mp3");
 
                 await _youtubeClient.Videos.Streams.DownloadAsync(audioStreamInfo, outputPath).ConfigureAwait(false);
                 _logger.Info(string.Format("Audio successfully downloaded in output path:{0}", outputPath));
                 #endregion
 
-                var thumbnailUrl = video.Thumbnails.Count > 0 ? video.Thumbnails[0].Url : null;
+                var thumbnailUrl = video.Thumbnails?[0].Url;
+                var author = video.Author?.ChannelTitle;
 
-                return new SongFinderResponse(video.Title, video.Description, video.Url, $"{songTitle}.mp3", thumbnailUrl);
+                return new SongFinderResponse(video.Title, video.Description, video.Url, $"{songTitle}.mp3", thumbnailUrl, author);
             }
             catch (Exception ex)
             {
-                LogAndThrowException("extract and save", ex, youtubeUrl);
+                LogAndThrowException("extract and save", ex, url);
                 throw;
             }
         }

@@ -21,6 +21,16 @@ namespace Playlist_Pro
             services.AddSwaggerGen();
             services.AddSingleton<ISongService>(DBContext.DatabaseClient.InitializeSongContainer(Configuration.GetSection("CosmosDb")).GetAwaiter().GetResult());
             services.AddSingleton<ISongFinderService>(DBContext.DatabaseClient.InitializeKeys(Configuration.GetSection("SongFinder")));
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowSpecificOrigin",
+                    builder =>
+                    {
+                        builder.WithOrigins("http://localhost:3000") // Allow requests from this origin
+                               .AllowAnyHeader()
+                               .AllowAnyMethod();
+                    });
+            });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -33,6 +43,8 @@ namespace Playlist_Pro
             }
 
             app.UseHttpsRedirection();
+
+            app.UseCors("AllowSpecificOrigin");
 
             app.UseRouting();
 
