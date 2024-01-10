@@ -49,15 +49,7 @@ namespace Playlist_Pro.Controllers
         {
             // Find Song from Platforms: Youtube,Soundcloud
             var onlineResponse = await _songFinderService.Download(song.PlatformUrl, song.Platform);
-
-            song.Id = Guid.NewGuid().ToString();
-            song.Path = string.IsNullOrEmpty(song.Path) ? onlineResponse.Path : song.Path;
-            song.Name = string.IsNullOrEmpty(song.Name) ? onlineResponse.Title : song.Name;
-            song.Description = string.IsNullOrEmpty(song.Description) ? onlineResponse.Description : song.Description;
-            song.Thumbnail = string.IsNullOrEmpty(song.Thumbnail) ? onlineResponse.ThumbnailUrl : song.Thumbnail;
-            song.Author = string.IsNullOrEmpty(song.Author) ? onlineResponse.Author : song.Author;
-            await _songService.AddAsync(song);
-
+            await _songService.AddAsync(onlineResponse, song);
             return CreatedAtAction(nameof(Get), new { id = song.Id }, song);
         }
 

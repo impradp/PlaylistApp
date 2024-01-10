@@ -2,6 +2,7 @@
 using Microsoft.Azure.Cosmos;
 using Playlist_Pro.Models;
 using PlaylistPro.Exceptions;
+using SongFinder.Models;
 
 namespace Playlist_Pro.Services.Song
 {
@@ -22,11 +23,14 @@ namespace Playlist_Pro.Services.Song
         /// </summary>
         /// <param name="song">The song to be saved.</param>
         /// <returns>The song saved in local library.</returns>
-        public async Task AddAsync(SongModel song)
+        public async Task AddAsync(SongFinderResponse songFinderResponse, SongModel song)
         {
             try
             {
-                await _container.CreateItemAsync(song, new PartitionKey(song.Id));
+                var mappedResponse = PrepareWithOnlineResponse(songFinderResponse, song);
+
+                song.Id = Guid.NewGuid().ToString();
+                await _container.CreateItemAsync(mappedResponse, new PartitionKey(mappedResponse.Id));
                 _logger.Info("Song saved successfully.");
             }
             catch (Exception ex)
@@ -151,6 +155,22 @@ namespace Playlist_Pro.Services.Song
                 throw new CustomException(string.Format("Exception occured while fetching song from title with message:{0}", ex.Message));
             }
 
+        }
+
+        /// <summary>
+        /// Map Online Response with SongModel entity
+        /// </summary>
+        /// <param name="songFinderResponse">The online response for selected platform url</param>
+        /// <param name="song">The song model containing initially submitted values.</param>
+        /// <returns>The song model with online values</returns>
+        private SongModel PrepareWithOnlineResponse(SongFinderResponse songFinderResponse, SongModel song)
+        {
+            song.Path = songFinderResponse.Path;
+            song.Name = string.IsNullOrEmpty(song.Name) ? songFinderResponse.Title : song.Name;
+            song.Description = songFinderResponse.Description;
+            song.Thumbnail = songFinderResponse.ThumbnailUrl;
+            song.Author = songFinderResponse.Author;
+            return song;
         }
     }
 }

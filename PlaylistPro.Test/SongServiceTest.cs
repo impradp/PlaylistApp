@@ -3,6 +3,7 @@ using Microsoft.Azure.Cosmos;
 using Moq;
 using Playlist_Pro.Models;
 using Playlist_Pro.Services.Song;
+using SongFinder.Models;
 
 namespace PlaylistPro.Test
 {
@@ -24,6 +25,7 @@ namespace PlaylistPro.Test
         {
             // Arrange
             var song = _fixture.Create<SongModel>();
+            var songFinderResponse = _fixture.Create<SongFinderResponse>();
 
             _containerMock
                 .Setup(container => container.CreateItemAsync(
@@ -40,7 +42,7 @@ namespace PlaylistPro.Test
                 .Verifiable();
 
             // Act
-            await _songService.AddAsync(song);
+            await _songService.AddAsync(songFinderResponse,song);
 
             // Assert
             _containerMock.Verify();

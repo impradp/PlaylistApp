@@ -1,4 +1,5 @@
 ﻿using Playlist_Pro.Models;
+using SongFinder.Models;
 
 namespace Playlist_Pro.Services.Song
 {
@@ -6,7 +7,7 @@ namespace Playlist_Pro.Services.Song
     {
         Task<IEnumerable<SongModel>> GetMultipleAsync();
         Task<SongModel> GetAsync(string id);
-        Task AddAsync(SongModel song);
+        Task AddAsync(SongFinderResponse songFinderResponse, SongModel song);
         Task UpdateAsync(string id, SongModel song);
         Task DeleteAsync(string id);
         Task<IEnumerable<SongModel>> GetByNameAsync(string songName);

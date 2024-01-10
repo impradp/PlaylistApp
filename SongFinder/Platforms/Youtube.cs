@@ -140,6 +140,7 @@ namespace SongFinder.Platforms
 
                 var songTitle = GetValidSongTitle(video.Title);
 
+                //TODO: Use bucket to store these extracted mp3.
                 var outputPath = Path.Combine(@"D:\Private\audio-player-tutorial\src\assets", $"{songTitle}.mp3");
 
                 await _youtubeClient.Videos.Streams.DownloadAsync(audioStreamInfo, outputPath).ConfigureAwait(false);
